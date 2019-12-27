@@ -116,6 +116,82 @@ app.get('/movies/directors/:Name', passport.authenticate('jwt', { session: false
     });
 });
 
+// Add new Movie
+app.post("/movies",
+  (req, res) => {
+    Movies.findOne({ Title: req.body.Title })
+      .then((movie) => {
+        if (movie) {
+          return res.status(400).send(req.body.Title + " already exists");
+        } else {
+          Movies.create({
+            Title: req.body.Title,
+            Description: req.body.Description,
+            Genre: req.body.Genre,
+            Director: req.body.Director,
+            ImagePath: req.body.ImagePath,
+          })
+            .then((movie) => {
+              res.status(201).json(movie);
+            })
+            .catch((error) => {
+              console.error(error);
+              res.status(500).send("Error: " + error);
+            });
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).send("Error: " + error);
+      });
+  }
+);
+
+// Update Movie
+app.put(
+  "/movies/:Title",
+  (req, res) => {
+    Movies.findOneAndUpdate(
+      { Title: req.body.Title },
+      {
+        $set: {
+          Title: req.body.Title,
+          Description: req.body.Description,
+          Genre: req.body.Genre,
+          Director: req.body.Director,
+          ImagePath: req.body.ImagePath
+        }
+      },
+      { new: true }, // This line makes sure that the updated document is returned
+      (error, updatedMovie) => {
+        if (error) {
+          console.error(error);
+          res.status(500).send("Error: " + error);
+        } else {
+          res.json(updatedMovie);
+        }
+      }
+    );
+  }
+);
+// Delete a movie by title
+app.delete(
+  "/movies/:Title",
+  (req, res) => {
+    Movies.findOneAndRemove({ Title: req.body.Title })
+      .then((movie) => {
+        if (!movie) {
+          res.status(400).send(req.body.Title + " was not found");
+        } else {
+          res.status(200).send(req.body.Title + " was deleted.");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).send("Error: " + error);
+      });
+  }
+);
 ///////////////////USER REQUESTS/////////////////////
 
 //Creates new user profile
